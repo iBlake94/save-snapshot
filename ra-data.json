@@ -1,0 +1,146 @@
+{
+  "user": "iBlake94",
+  "fetched_at": "2026-11-15T03:03:09.317551Z",
+  "games": {
+    "724": {
+      "id": 724,
+      "title": "Pokémon Red",
+      "unlocked": 3,
+      "total": 93,
+      "completion": "3.23%",
+      "points_earned": 8,
+      "points_total": 745,
+      "recent": []
+    },
+    "586": {
+      "id": 586,
+      "title": "Pokémon Blue",
+      "unlocked": 90,
+      "total": 90,
+      "completion": "100.00%",
+      "points_earned": 678,
+      "points_total": 678,
+      "recent": []
+    },
+    "723": {
+      "id": 723,
+      "title": "Pokémon Yellow",
+      "unlocked": 3,
+      "total": 76,
+      "completion": "3.95%",
+      "points_earned": 3,
+      "points_total": 458,
+      "recent": []
+    },
+    "576": {
+      "id": 576,
+      "title": "Pokémon Gold",
+      "unlocked": 0,
+      "total": 72,
+      "completion": "0.00%",
+      "points_earned": 0,
+      "points_total": 685,
+      "recent": []
+    },
+    "722": {
+      "id": 722,
+      "title": "Pokémon Silver",
+      "unlocked": 1,
+      "total": 75,
+      "completion": "1.33%",
+      "points_earned": 10,
+      "points_total": 616,
+      "recent": []
+    },
+    "810": {
+      "id": 810,
+      "title": "Pokémon Crystal",
+      "unlocked": 23,
+      "total": 113,
+      "completion": "20.35%",
+      "points_earned": 107,
+      "points_total": 864,
+      "recent": []
+    },
+    "515": {
+      "id": 515,
+      "title": "Pokémon FireRed",
+      "unlocked": 6,
+      "total": 61,
+      "completion": "9.84%",
+      "points_earned": 27,
+      "points_total": 453,
+      "recent": []
+    },
+    "668": {
+      "id": 668,
+      "title": "Pokémon Emerald",
+      "unlocked": 2,
+      "total": 197,
+      "completion": "1.02%",
+      "points_earned": 2,
+      "points_total": 2086,
+      "recent": []
+    },
+    "791": {
+      "id": 791,
+      "title": "Pokémon Sapphire",
+      "unlocked": 0,
+      "total": 49,
+      "completion": "0.00%",
+      "points_earned": 0,
+      "points_total": 485,
+      "recent": []
+    },
+    "10113": {
+      "id": 10113,
+      "title": "The Legend of Zelda: Ocarina of Time",
+      "unlocked": 0,
+      "total": 97,
+      "completion": "0.00%",
+      "points_earned": 0,
+      "points_total": 690,
+      "recent": []
+    },
+    "710": {
+      "id": 710,
+      "title": "The Legend of Zelda: Oracle of Ages",
+      "unlocked": 1,
+      "total": 55,
+      "completion": "1.82%",
+      "points_earned": 3,
+      "points_total": 514,
+      "recent": []
+    },
+    "676": {
+      "id": 676,
+      "title": "The Legend of Zelda: Oracle of Seasons",
+      "unlocked": 0,
+      "total": 59,
+      "completion": "0.00%",
+      "points_earned": 0,
+      "points_total": 509,
+      "recent": []
+    },
+    "559": {
+      "id": 559,
+      "title": "The Legend of Zelda: The Minish Cap",
+      "unlocked": 5,
+      "total": 66,
+      "completion": "7.58%",
+      "points_earned": 25,
+      "points_total": 705,
+      "recent": []
+    },
+    "580": {
+      "id": 580,
+      "title": "The Legend of Zelda: A Link to the Past & Four Swords",
+      "unlocked": 0,
+      "total": 62,
+      "completion": "0.00%",
+      "points_earned": 0,
+      "points_total": 570,
+      "recent": []
+    }
+  }
+}
