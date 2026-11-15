@@ -209,8 +209,8 @@
 
     <label class="drop" id="drop">
       <b>Add a save to the collection</b>
-      <span>Drop a save file here, or tap to choose one — Pokémon Red / Blue / Yellow (.sav / .srm, 32 KB) · Gold / Silver / Crystal (.sav / .srm, 32 KB) · FireRed / LeafGreen / Ruby / Sapphire / Emerald (.sav / .srm, 128 KB) · Zelda: Oracle of Ages / Seasons (.srm, 8 KB), The Minish Cap (.srm, 8 KB), A Link to the Past &amp; Four Swords (.srm, 128 KB), Ocarina of Time (.srm, 290 KB). Read in your browser only — nothing is uploaded.</span>
-      <input type="file" id="file" accept=".sav,.srm">
+      <span>Drop a save file here, or tap to choose one — Pokémon Red / Blue / Yellow (.sav / .srm, 32 KB) · Gold / Silver / Crystal (.sav / .srm, 32 KB) · FireRed / LeafGreen / Ruby / Sapphire / Emerald (.sav / .srm, 128 KB) · Zelda: Oracle of Ages / Seasons (.srm, 8 KB), The Minish Cap (.srm, 8 KB), A Link to the Past &amp; Four Swords (.srm, 128 KB), Ocarina of Time (.srm, 290 KB). A PKForge -snapshot.json export works too. Read in your browser only — nothing is uploaded.</span>
+      <input type="file" id="file" accept=".sav,.srm,.json">
     </label>
   </div>
 
@@ -224,6 +224,7 @@
       <h2><span class="dot">●</span> Trainer Card</h2>
       <div class="big" id="trainerLine"></div>
       <div class="row" style="margin-top:12px" id="trainerRow"></div>
+      <div id="provLine" style="margin-top:8px;color:var(--mut);font-size:13px"></div>
       <div id="notes" style="margin-top:10px"></div>
     </div>
 
@@ -3390,12 +3391,14 @@ function adaptSnapshot(entry) {
   if (entry.kind && entry.kind.indexOf("zelda-") === 0) {
     const snap = adaptZelda(entry.raw, entry);
     snap.id = entry.id; snap.file_name = entry.file_name; snap.saved_at = entry.saved_at;
+    snap.source = entry.source || null;
     return snap;
   }
   const snap = entry.kind === "gen3" ? adaptGen3(entry.raw, entry)
     : entry.kind === "gen2" ? adaptGen2(entry.raw, entry)
     : adaptGen1(entry.raw, entry);
   snap.id = entry.id; snap.file_name = entry.file_name; snap.saved_at = entry.saved_at;
+  snap.source = entry.source || null;
   return snap;
 }
 /* ---- Zelda ---- */
@@ -4076,13 +4079,14 @@ function renderDetail(snap) {
     '<div><span>Trainer ID</span><b>' + String(snap.trainer_id).padStart(5, "0") + "</b></div>" +
     (snap.secret_id !== null ? '<div><span>Secret ID</span><b>' + String(snap.secret_id).padStart(5, "0") + "</b></div>" : "") +
     (snap.gender ? '<div><span>Gender</span><b>' + esc(snap.gender) + "</b></div>" : "") +
-    '<div><span>Rival</span><b>' + esc(snap.rival) + "</b></div>" +
+    (snap.rival ? '<div><span>Rival</span><b>' + esc(snap.rival) + "</b></div>" : "") +
     '<div><span>Play time</span><b id="ptVal">' + esc(playTimeDisplay(snap) || "—") + "</b></div>" +
     '<div><span>Money</span><b>₽' + snap.money.toLocaleString() + "</b></div>" +
     (snap.coins !== null ? '<div><span>Coins</span><b>' + snap.coins.toLocaleString() + "</b></div>" : "") +
-    '<div><span>Location</span><b>' + esc(snap.location) + "</b></div>" +
+    (snap.location ? '<div><span>Location</span><b>' + esc(snap.location) + "</b></div>" : "") +
     (snap.starter ? '<div><span>Starter</span><b>' + esc(snap.starter) + "</b></div>" : "");
   }
+  $("provLine").textContent = snap.source ? "Source: " + snap.source : "";
   $("notes").innerHTML = snap.notes.length
     ? snap.notes.map(n => '<div style="color:var(--red-d);font-weight:600">' + esc(n) + "</div>").join("")
     : (snap.checksum_valid ? "" : '<div style="color:var(--red-d);font-weight:600">Checksum check failed for this save.</div>');
@@ -4241,6 +4245,7 @@ function addEntry(kind, raw, fileName) {
 }
 function handleFile(f) {
   if (!f) return;
+  if (/\.json$/i.test(f.name)) { handleSnapshotJson(f); return; }
   const r = new FileReader();
   r.onload = () => {
     try {
@@ -4250,6 +4255,43 @@ function handleFile(f) {
     } catch (e) { $("err").textContent = e.message; }
   };
   r.readAsArrayBuffer(f);
+}
+/* A PKForge -snapshot.json export: the snapshot object itself, already
+   parsed — validated and adapted through the same path as a save file,
+   so a bad export is refused with a reason instead of landing half-read. */
+function handleSnapshotJson(f) {
+  const r = new FileReader();
+  r.onload = () => {
+    try { ingestSnapshotJson(String(r.result), f.name); }
+    catch (e) { $("err").textContent = e.message; }
+  };
+  r.readAsText(f);
+}
+function ingestSnapshotJson(text, fileName) {
+  let obj;
+  try { obj = JSON.parse(text); }
+  catch (e) { throw new Error("That .json file is not a Save Snapshot export (" + e.message + ")."); }
+  if (!obj || typeof obj !== "object" || (obj.kind !== "gen1" && obj.kind !== "gen2" && obj.kind !== "gen3"))
+    throw new Error("That .json file is not a Save Snapshot export: it needs a kind of gen1, gen2 or gen3 and a raw save.");
+  if (!obj.raw || typeof obj.raw !== "object" || typeof obj.raw.trainer !== "string")
+    throw new Error("That .json file is not a Save Snapshot export: its raw save is missing the trainer.");
+  const stem = fileName.replace(/-snapshot\.json$/i, "").replace(/\.json$/i, "");
+  const e = { id: (typeof obj.id === "string" && obj.id) || ("u" + Date.now().toString(36) + Math.floor(Math.random() * 1e6).toString(36)),
+    file_name: obj.file_name || (stem + ".sav"),
+    kind: obj.kind,
+    game_label: obj.game_label || null,
+    label: obj.label || null,
+    saved_at: obj.saved_at || new Date().toISOString(),
+    source: obj.source || "Snapshot JSON",
+    raw: obj.raw };
+  const snap = adaptSnapshot(e); /* throws on a malformed raw — nothing is stored then */
+  entries.unshift(e);
+  saveStore(entries);
+  currentId = e.id;
+  currentSnap = snap;
+  $("home").classList.add("hidden");
+  renderDetail(currentSnap);
+  renderShelf();
 }
 $("file").addEventListener("change", e => handleFile(e.target.files[0]));
 const drop = $("drop");
