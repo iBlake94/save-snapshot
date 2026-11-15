@@ -214,6 +214,11 @@
       <div id="notes" style="margin-top:10px"></div>
     </div>
 
+    <div class="card hidden" id="raCard">
+      <h2><span class="dot">●</span> RetroAchievements</h2>
+      <div id="raBody"></div>
+    </div>
+
     <div class="card poke-only">
       <h2><span class="dot">●</span> Badge Case</h2>
       <div class="case" id="badges"></div>
@@ -3730,6 +3735,69 @@ function loadEntries() {
 let entries = loadEntries();
 let currentId = null, currentSnap = null, currentText = "";
 
+/* RetroAchievements data (ra-data.json, written daily by a GitHub Action).
+   Loaded network-first; if it is missing or the fetch fails (offline, or
+   the file has not been generated yet), the collection works exactly as
+   before with no RA section and no error. The file holds only public
+   achievement counts and titles — no API key ever reaches the page. */
+const RA_GAME_BY_LABEL = {
+  "Pokémon Red": 724, "Pokémon Blue": 586, "Pokémon Yellow": 723,
+  "Pokémon Gold": 576, "Pokémon Silver": 722, "Pokémon Crystal": 810,
+  "Pokémon FireRed": 515, "Pokémon Emerald": 668, "Pokémon Sapphire": 791,
+  "The Legend of Zelda: Ocarina of Time": 10113,
+  "The Legend of Zelda: Oracle of Ages": 710,
+  "The Legend of Zelda: Oracle of Seasons": 676,
+  "The Legend of Zelda: The Minish Cap": 559,
+  "The Legend of Zelda: A Link to the Past & Four Swords": 580
+};
+let raData = null;
+function raForLabel(label) {
+  if (!raData || !raData.games) return null;
+  const id = RA_GAME_BY_LABEL[label];
+  return id ? (raData.games[String(id)] || null) : null;
+}
+function raLineFor(label) {
+  const g = raForLabel(label);
+  if (!g || !g.total) return "";
+  const pct = Math.round(g.unlocked / g.total * 100);
+  return '<div class="prog"><div class="lbl"><span>🏆 Achievements</span><span>' + g.unlocked + " / " + g.total + '</span></div>' +
+    '<div class="bar"><div style="width:' + pct + '%"></div></div></div>';
+}
+function renderRaDetail(snap) {
+  const card = $("raCard"), body = $("raBody");
+  const g = raForLabel(snap.game_label);
+  if (!g) { card.classList.add("hidden"); body.innerHTML = ""; return; }
+  const pct = g.total ? Math.round(g.unlocked / g.total * 100) : 0;
+  let html = '<div class="row"><div><span>Achievements</span><b>' + g.unlocked + " / " + g.total + '</b></div>' +
+    '<div><span>Completion</span><b>' + pct + '%</b></div>' +
+    '<div><span>Points</span><b>' + (g.points_earned || 0) + " / " + (g.points_total || 0) + "</b></div></div>" +
+    '<div class="bar" style="margin-top:10px"><div style="width:' + pct + '%"></div></div>';
+  if (g.recent && g.recent.length) {
+    html += '<div class="dexsub">Recent unlocks</div>' + g.recent.map(a =>
+      '<div class="zrow"><span>🏆 ' + esc(a.title || "") + "</span><span>" + esc(a.date || "") + "</span></div>").join("");
+  } else {
+    html += '<div class="detail" style="margin-top:10px">No achievements unlocked yet — or none recently.</div>';
+  }
+  if (raData && raData.fetched_at) {
+    html += '<div class="detail" style="margin-top:10px">Updated ' + esc(new Date(raData.fetched_at).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" })) + ' · RetroAchievements</div>';
+  }
+  body.innerHTML = html;
+  card.classList.remove("hidden");
+}
+function loadRaData() {
+  try {
+    fetch("./ra-data.json", { cache: "no-store" })
+      .then(r => r.ok ? r.json() : null)
+      .then(d => {
+        if (!d || !d.games) return;
+        raData = d;
+        renderShelf();
+        if (currentSnap) renderRaDetail(currentSnap);
+      })
+      .catch(() => {});
+  } catch (e) {}
+}
+
 /* Sprite fallback chain: versioned in-game sprite -> modern sprite -> Poké Ball. */
 function spriteFallback(img) {
   if (!img.dataset.step) { img.dataset.step = "modern"; img.src = img.dataset.modern; }
@@ -3935,6 +4003,7 @@ function renderDetail(snap) {
             "<span>#" + String(m.national).padStart(3, "0") + " " + esc(m.name) + nick + "</span></div>";
         }).join("") + "</div></div>").join("");
   }
+  renderRaDetail(snap);
   currentText = humanText(snap);
   $("plain").textContent = currentText;
   $("err").textContent = "";
@@ -3964,6 +4033,7 @@ function shelfCard(e) {
         '<div class="meta2">Pokédex ' + s.dex_owned.length + " / " + s.dex_total + " owned · " + esc(s.location) + "</div>" +
         (when ? '<div class="meta2">' + esc(when) + "</div>" : "");
     }
+    lines += raLineFor(s.game_label);
     art = s.boxart
       ? '<div class="art"><span class="ball"></span><img src="' + s.boxart + '" alt="" loading="lazy" onerror="this.remove()"></div>'
       : '<div class="art"><span class="ball"></span></div>';
@@ -4108,6 +4178,7 @@ $("backBtn").addEventListener("click", () => {
 $("cmpA").addEventListener("change", renderCompareOut);
 $("cmpB").addEventListener("change", renderCompareOut);
 renderShelf();
+loadRaData();
 
 </script>
 <script>
