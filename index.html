@@ -53,6 +53,8 @@
     line-height:1.1; text-align:center; border:3px solid rgba(255,255,255,.25); }
   .bdg small { font-size:9px; font-weight:600; opacity:.85; }
   .bdg.off { background:#3a4157 !important; color:#8b93a8; border-style:dashed; }
+  .bdg img.bdg-img { width:32px; height:32px; image-rendering:pixelated; }
+  .bdg img.bdg-img.off { filter:grayscale(1); opacity:.45; }
   .bar { height:10px; background:#e8e2d0; border:2px solid var(--line); border-radius:99px; overflow:hidden; }
   .bar > div { height:100%; background:var(--green); }
   .party-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:12px; }
@@ -136,7 +138,13 @@
   #detail.zelda .banner { border-color:var(--z-accent,#b7791f); }
   .banner-placeholder { margin-top:16px; border:2px dashed var(--z-accent,#b7791f); border-radius:16px; padding:22px 18px; text-align:center; color:var(--mut); font-size:13.5px; background:var(--card); }
   .zhearts { font-size:22px; letter-spacing:2px; color:#c53030; }
+  .zhearts img.zh { width:22px; height:22px; image-rendering:pixelated; vertical-align:-4px; margin-right:2px; }
   .zchip { display:inline-block; background:#eef3e6; border:1.5px solid #c9d8b8; border-radius:99px; padding:2px 10px; font-size:12.5px; font-weight:600; margin:0 5px 5px 0; }
+  .zchip img.zitem-img { width:18px; height:18px; image-rendering:pixelated; vertical-align:-4px; margin-right:4px; }
+  .zchip.off { opacity:.55; }
+  .zchip.off img.zitem-img { filter:grayscale(1); }
+  .zcase-label { color:var(--mut); font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; margin:10px 0 6px; }
+  .zcase-row { display:flex; flex-wrap:wrap; }
   .zrow { display:flex; gap:10px; margin-bottom:6px; font-size:14px; }
   .zrow span:first-child { color:var(--mut); flex:0 0 130px; font-size:12px; text-transform:uppercase; letter-spacing:.06em; padding-top:2px; }
   .zrow span:last-child { overflow-wrap:break-word; }
@@ -162,6 +170,7 @@
     .zrow span:first-child{flex-basis:104px;}
     .mon img.spr, .spr-fallback{width:72px;height:72px;}
     .bdg{width:48px;height:48px;}
+    .bdg img.bdg-img{width:26px;height:26px;}
     .btns{gap:8px;}
   }
 </style>
@@ -264,6 +273,7 @@
       <h2><span class="dot">●</span> Hearts &amp; Progress</h2>
       <div id="zeldaHearts" style="margin-bottom:10px"></div>
       <div id="zeldaProgress"></div>
+      <div id="zeldaCase"></div>
     </div>
 
     <div class="card zelda-only hidden">
@@ -3153,6 +3163,15 @@ var BADGE_COLORS = {
   Zephyr: "#a98ff3", Hive: "#a6b91a", Plain: "#e2bf65", Fog: "#735797",
   Storm: "#f08030", Mineral: "#b6a136", Glacier: "#96d9d6", Rising: "#6f35fc"
 };
+/* Ocarina of Time: the 12 ocarina songs, named as the save parser reports
+   them in quest_status. The six warp songs have their own icons; the other
+   six share the one musical-note icon (song-lullaby.png). */
+var OOT_WARP_SONGS = ["Minuet of Forest", "Bolero of Fire", "Serenade of Water",
+  "Requiem of Spirit", "Nocturne of Shadow", "Prelude of Light"];
+var OOT_SONGS = OOT_WARP_SONGS.concat(["Zelda's Lullaby", "Epona's Song",
+  "Saria's Song", "Sun's Song", "Song of Time", "Song of Storms"]);
+var ELEMENT_DISPLAY = { EARTH_ELEMENT: "Earth Element", FIRE_ELEMENT: "Fire Element",
+  WATER_ELEMENT: "Water Element", WIND_ELEMENT: "Wind Element" };
 function typeColor(t) {
   return { Normal:"#A8A77A", Fire:"#EE8130", Water:"#6390F0", Electric:"#F7D02C",
     Grass:"#7AC74C", Ice:"#96D9D6", Fighting:"#C22E28", Poison:"#A33EA1",
@@ -3392,16 +3411,22 @@ function fmtHearts(h) {
   return String(h);
 }
 function heartMeter(snap) {
-  /* Decorative meter; the exact value is always printed beside it. */
+  /* Sprite hearts (./zelda-assets/heart-*.png, The Wind Waker life-energy
+     icons: full, 3/4, 1/2, 1/4, empty). Each img falls back to the matching
+     text heart if the file is missing, so the meter reads exactly as the
+     old text one until the images are uploaded. */
   if (snap.hearts === null || snap.hearts === undefined) return "";
   const full = Math.floor(snap.hearts), frac = snap.hearts - full;
   const max = snap.max_hearts || 0;
-  let meter = "♥".repeat(full);
-  if (frac >= 0.75) meter += "♥";
-  else if (frac >= 0.5) meter += "◐";
-  else if (frac >= 0.25) meter += "◔";
+  const img = (file, ch) => '<img class="zh" src="./zelda-assets/' + file +
+    '" alt="" loading="lazy" onerror="this.outerHTML=\'' + ch + '\'">';
+  let meter = "";
+  for (let i = 0; i < full; i++) meter += img("heart-full.png", "♥");
+  if (frac >= 0.75) meter += img("heart-34.png", "♥");
+  else if (frac >= 0.5) meter += img("heart-12.png", "◐");
+  else if (frac >= 0.25) meter += img("heart-14.png", "◔");
   const empty = Math.max(0, Math.ceil(max) - Math.ceil(snap.hearts));
-  meter += "♡".repeat(empty);
+  for (let i = 0; i < empty; i++) meter += img("heart-empty.png", "♡");
   return '<span class="zhearts">' + meter + "</span> " + fmtHearts(snap.hearts) + " / " + fmtHearts(snap.max_hearts) + " hearts";
 }
 function zeldaPlayTime(raw) {
@@ -3467,6 +3492,7 @@ function adaptZelda(raw, entry) {
     snap.progress_done = raw.essence_count; snap.progress_total = 8;
     snap.progress_text = "Essences " + raw.essence_count + " of 8" + (raw.essences.length ? " — " + raw.essences.join(", ") : " — none yet");
     snap.progress_short = raw.essence_count + "/8 essences";
+    snap.essences = raw.essences || [];
     snap.dungeon_names = (raw.dungeons || []).map(d => d.dungeon);
     snap.progress_lines = [
       ["Essences", raw.essence_count + " of 8" + (raw.essences.length ? " (" + raw.essences.join(", ") + ")" : "")],
@@ -3501,6 +3527,7 @@ function adaptZelda(raw, entry) {
       ["Gold Skulltulas", String(raw.gold_skulltula_tokens)],
       ["Deaths", String(raw.deaths)],
     ];
+    snap.songs_earned = (raw.quest_status || []).filter(n => OOT_SONGS.indexOf(n) !== -1);
     const eq = (raw.equipment && raw.equipment.equipped) || {};
     snap.equipment = ["Sword: " + (eq.sword || "None"), "Shield: " + (eq.shield || "None"),
                       "Tunic: " + (eq.tunic || "—"), "Boots: " + (eq.boots || "—")];
@@ -3535,6 +3562,7 @@ function adaptZelda(raw, entry) {
     snap.kinstones_fused = sv.kinstones.fused_count;
     snap.equipment = (st.equipped || []).slice();
     snap.items = (sv.inventory || []).map(i => i.item).filter(x => x && x !== "NONE");
+    snap.elements = Object.keys(ELEMENT_DISPLAY).filter(e => snap.items.indexOf(e) !== -1);
     snap.detail_rows = [
       ["Bombs", String(st.bomb_count)],
       ["Arrows", String(st.arrow_count)],
@@ -3838,14 +3866,27 @@ function sprImg(snap, n, cls) {
   return '<img class="' + cls + '" src="' + v + '" data-modern="' + modernSprite(n) + '" loading="lazy" alt="" onerror="spriteFallback(this)">' +
     '<span class="spr-fallback"><span class="ball"></span></span>';
 }
+/* Real badge sprites (./badges/<slug>.png — the official in-game sprites
+   from PokeAPI/sprites, verified 1-24 = Kanto, Johto, Hoenn in order).
+   Each img falls back to the old ✓/· marker if the file is missing, so the
+   case is identical to the old drawn one until the images are uploaded. */
+var BADGE_FILES = { Boulder: "boulder", Cascade: "cascade", Thunder: "thunder",
+  Rainbow: "rainbow", Soul: "soul", Marsh: "marsh", Volcano: "volcano", Earth: "earth",
+  Zephyr: "zephyr", Hive: "hive", Plain: "plain", Fog: "fog", Storm: "storm",
+  Mineral: "mineral", Glacier: "glacier", Rising: "rising",
+  Stone: "stone", Knuckle: "knuckle", Dynamo: "dynamo", Heat: "heat",
+  Balance: "balance", Feather: "feather", Mind: "mind", Rain: "rain" };
 function badgeCase(snap) {
   const groups = snap.badge_groups || [{ label: null, names: snap.badge_names }];
   return groups.map(g => {
     const chips = g.names.map(name => {
       const got = snap.badges.includes(name);
       const color = BADGE_COLORS[name] || "#888888";
+      const f = BADGE_FILES[name];
+      const mark = got ? "✓" : "·";
+      const img = f ? '<img class="bdg-img' + (got ? "" : " off") + '" src="./badges/' + f + '.png" alt="" loading="lazy" onerror="this.outerHTML=\'' + mark + '\'">' : mark;
       return '<div class="bdg' + (got ? "" : " off") + '" style="background:' + color + '" title="' + name + ' Badge">' +
-        (got ? "✓" : "·") + "<small>" + name + "</small></div>";
+        img + "<small>" + name + "</small></div>";
     }).join("");
     return (g.label ? '<div><div class="bdg-label">' + g.label + '</div><div class="bdg-row">' + chips + '</div></div>'
                     : '<div class="bdg-row">' + chips + "</div>");
@@ -3888,7 +3929,57 @@ function dexChips(snap, nums, names) {
     return '<span class="dexchip">' + img + "#" + String(n).padStart(3, "0") + " " + esc(names[i] || ("#" + n)) + "</span>";
   }).join("");
 }
+function zslug(s) { return s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, ""); }
+/* Zelda collection cases: real in-game item sprites (./zelda-assets/).
+   Essences from Zelda Wiki (OoA/OoS <name> Sprite), Elements from The
+   Minish Cap, song icons from Ocarina of Time (the six warp songs have
+   their own icons; the other six share the one note icon), Pendants and
+   the Crystal from A Link to the Past. Each chip's img is removed if the
+   file is missing, leaving the plain text chip — the view is identical
+   to the old text-only one until the images are uploaded. */
+var ZELDA_CASES = {
+  "zelda-oracle-ages": [{ label: "Essences",
+    names: ORACLE_TABLES.essences.ages,
+    file: n => "essence-ages-" + zslug(n) + ".png",
+    earned: s => s.essences || [] }],
+  "zelda-oracle-seasons": [{ label: "Essences",
+    names: ORACLE_TABLES.essences.seasons,
+    file: n => "essence-seasons-" + zslug(n) + ".png",
+    earned: s => s.essences || [] }],
+  "zelda-minish-cap": [{ label: "Elements",
+    names: ["Earth Element", "Fire Element", "Water Element", "Wind Element"],
+    file: n => "element-" + zslug(n.replace(" Element", "")) + ".png",
+    earned: s => (s.elements || []).map(e => ELEMENT_DISPLAY[e]).filter(Boolean) }],
+  "zelda-oot": [{ label: "Ocarina Songs",
+    names: OOT_SONGS,
+    file: n => OOT_WARP_SONGS.indexOf(n) !== -1 ? "song-" + zslug(n) + ".png" : "song-lullaby.png",
+    earned: s => s.songs_earned || [] }],
+  "zelda-alttp": [
+    { label: "Pendants",
+      names: ["Pendant of Courage", "Pendant of Wisdom", "Pendant of Power"],
+      file: n => "pendant-" + zslug(n.replace("Pendant of ", "")) + ".png",
+      earned: () => [] },
+    { label: "Crystals",
+      names: ["Palace of Darkness", "Swamp Palace", "Skull Woods", "Thieves' Town", "Ice Palace", "Misery Mire", "Turtle Rock"],
+      file: () => "crystal.png",
+      earned: () => [] }],
+};
+function zeldaCase(snap) {
+  const sets = ZELDA_CASES[snap.kind];
+  if (!sets) return "";
+  return sets.map(set => {
+    const got = set.earned(snap);
+    const chips = set.names.map(name => {
+      const has = got.indexOf(name) !== -1;
+      return '<span class="zchip' + (has ? "" : " off") + '" title="' + esc(name) + '">' +
+        '<img class="zitem-img" src="./zelda-assets/' + set.file(name) + '" alt="" loading="lazy" onerror="this.remove()">' +
+        esc(name) + "</span>";
+    }).join("");
+    return '<div class="zcase-label">' + esc(set.label) + " (" + got.length + " of " + set.names.length + ")</div><div class=\"zcase-row\">" + chips + "</div>";
+  }).join("");
+}
 function renderZeldaDetail(snap) {
+  $("zeldaCase").innerHTML = zeldaCase(snap);
   $("zeldaHearts").innerHTML = snap.hearts !== null && snap.hearts !== undefined
     ? heartMeter(snap) + (snap.heart_pieces !== null && snap.heart_pieces !== undefined
         ? ' <span style="color:var(--mut);font-size:13px">· ' + snap.heart_pieces + " of " + snap.heart_pieces_total + " heart pieces</span>" : "")
