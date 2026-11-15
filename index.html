@@ -3760,6 +3760,23 @@ function raForLabel(label) {
   const id = RA_GAME_BY_LABEL[label];
   return id ? (raData.games[String(id)] || null) : null;
 }
+/* Playtime fallback: the save's own counter first; otherwise the RA total
+   (UserTotalPlaytime, in seconds — RA only counts time played while signed
+   in to RetroAchievements), clearly labeled; null when neither exists.
+   Old ra-data.json files without playtime_seconds fall back to null, so
+   the display is exactly what it was before ("—"), never an error. */
+function raPlaytimeSeconds(label) {
+  const g = raForLabel(label);
+  if (!g || typeof g.playtime_seconds !== "number" || g.playtime_seconds <= 0) return null;
+  return g.playtime_seconds;
+}
+function playTimeDisplay(snap) {
+  if (snap.play_time) return snap.play_time;
+  const secs = raPlaytimeSeconds(snap.game_label);
+  if (secs === null) return null;
+  const m = Math.floor(secs / 60);
+  return Math.floor(m / 60) + ":" + String(m % 60).padStart(2, "0") + " · RA";
+}
 function raLineFor(label) {
   const g = raForLabel(label);
   if (!g || !g.total) return "";
@@ -3796,7 +3813,11 @@ function loadRaData() {
         if (!d || !d.games) return;
         raData = d;
         renderShelf();
-        if (currentSnap) renderRaDetail(currentSnap);
+        if (currentSnap) {
+          renderRaDetail(currentSnap);
+          const pt = $("ptVal");
+          if (pt) pt.textContent = playTimeDisplay(currentSnap) || "—";
+        }
       })
       .catch(() => {});
   } catch (e) {}
@@ -3954,7 +3975,7 @@ function renderDetail(snap) {
   if (isZ) {
     $("trainerRow").innerHTML =
       '<div><span>Player</span><b>' + esc(snap.trainer || "(no name yet)") + "</b></div>" +
-      '<div><span>Play time</span><b>' + esc(snap.play_time || "—") + "</b></div>" +
+      '<div><span>Play time</span><b id="ptVal">' + esc(playTimeDisplay(snap) || "—") + "</b></div>" +
       (snap.rupees !== null && snap.rupees !== undefined ? '<div><span>Rupees</span><b>' + snap.rupees + "</b></div>" : "") +
       (snap.hearts !== null && snap.hearts !== undefined ? '<div><span>Hearts</span><b>' + fmtHearts(snap.hearts) + " / " + fmtHearts(snap.max_hearts) + "</b></div>" : "") +
       (snap.companion ? '<div><span>Companion</span><b>' + esc(snap.companion) + "</b></div>" : "") +
@@ -3965,7 +3986,7 @@ function renderDetail(snap) {
     (snap.secret_id !== null ? '<div><span>Secret ID</span><b>' + String(snap.secret_id).padStart(5, "0") + "</b></div>" : "") +
     (snap.gender ? '<div><span>Gender</span><b>' + esc(snap.gender) + "</b></div>" : "") +
     '<div><span>Rival</span><b>' + esc(snap.rival) + "</b></div>" +
-    '<div><span>Play time</span><b>' + esc(snap.play_time) + "</b></div>" +
+    '<div><span>Play time</span><b id="ptVal">' + esc(playTimeDisplay(snap) || "—") + "</b></div>" +
     '<div><span>Money</span><b>₽' + snap.money.toLocaleString() + "</b></div>" +
     (snap.coins !== null ? '<div><span>Coins</span><b>' + snap.coins.toLocaleString() + "</b></div>" : "") +
     '<div><span>Location</span><b>' + esc(snap.location) + "</b></div>" +
@@ -4023,7 +4044,7 @@ function shelfCard(e) {
     const s = adaptSnapshot(e);
     if (s.series === "zelda") {
       title = (e.label || s.game_label) + " · " + (s.trainer || "No name yet");
-      sub = s.game_label + " · " + (s.play_time ? s.play_time : "playtime —");
+      sub = s.game_label + " · " + (playTimeDisplay(s) || "playtime —");
       const hearts = (s.hearts !== null && s.hearts !== undefined) ? fmtHearts(s.hearts) + "/" + fmtHearts(s.max_hearts) + " hearts" : "";
       lines = '<div class="prog"><div class="lbl"><span>' + esc(s.progress_label || "Progress") + '</span><span>' + esc(s.progress_short || "") + "</span></div></div>" +
         (hearts ? '<div class="meta2">' + esc(hearts) + "</div>" : "") +
@@ -4080,7 +4101,7 @@ function compareCol(e) {
   try { s = adaptSnapshot(e); } catch (err) { return '<div class="cmp-col"><h3>' + esc(e.file_name) + '</h3><span class="empty">Could not read this snapshot.</span></div>'; }
   const rows = [];
   rows.push(["Trainer", esc(s.trainer || "(no name yet)")]);
-  rows.push(["Play time", esc(s.play_time || "—")]);
+  rows.push(["Play time", esc(playTimeDisplay(s) || "—")]);
   if (s.series === "zelda") {
     if (s.hearts !== null && s.hearts !== undefined) rows.push(["Hearts", fmtHearts(s.hearts) + " / " + fmtHearts(s.max_hearts)]);
     if (s.rupees !== null && s.rupees !== undefined) rows.push(["Rupees", String(s.rupees)]);
