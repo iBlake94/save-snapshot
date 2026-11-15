@@ -8,10 +8,10 @@ added to the AYN Thor's homescreen (Chrome → *Add to Home screen* /
 
 | File | What it is |
 |---|---|
-| `index.html` | The Save Snapshot tool itself (same file as `~/workspace/your_files/save-snapshot.html`, plus PWA hooks). 11 snapshots preloaded; drag-and-drop / file-picker upload still works fully offline. |
+| `index.html` | The Save Snapshot tool itself (same file as `~/workspace/your_files/save-snapshot.html`, plus PWA hooks). 17 snapshots preloaded; drag-and-drop / file-picker upload still works fully offline. |
 | `manifest.webmanifest` | App name, icons, colours, `display: standalone`. |
 | `sw.js` | Service worker. Precaches the whole app shell (page, manifest, icons, all box art) and runtime-caches PokeAPI sprites. Versioned per build, so a new deploy replaces the old cache. |
-| `icons/` | Poké Ball app icons (192 / 512 / 512 maskable / 180 Apple touch). Generated locally, no hotlinking. |
+| `icons/` | Floppy-disk logo app icons (192 / 512 / 512 maskable / 180 Apple touch). Generated locally, no hotlinking. |
 | `art/` | The 11 games' real box cover art, downloaded and bundled locally (libretro thumbnail archive — Bulbapedia's archive blocks automated downloads, so the packager falls back to libretro automatically). |
 
 ## Rebuild (after the tool changes — Zelda, new games, new snapshots)
@@ -50,7 +50,7 @@ Exact steps (Blake's go-ahead needed — nothing here is connected yet):
    Wait ~1 minute. The app is live at
    `https://<username>.github.io/save-snapshot/`.
 5. **On the Thor**: open that URL in Chrome → menu (⋮) → *Add to Home
-   screen* → *Install*. The Poké Ball icon appears on the homescreen and
+   screen* → *Install*. The floppy-disk logo appears on the homescreen and
    opens the collection standalone, offline-capable.
 
 **Update flow:** rebuild with `build_pwa.py` → commit + push the changed
