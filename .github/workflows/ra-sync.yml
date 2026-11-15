@@ -1,0 +1,112 @@
+# Save Snapshot — RetroAchievements daily sync.
+# Fetches Blake's achievement progress for every game in the collection
+# and writes ra-data.json at the repo root. The PWA reads that file
+# (network-first, never cached) and shows per-game progress next to each
+# snapshot. The API key and username come from repository secrets
+# (RA_API_KEY, RA_USERNAME) and never appear in the repo, the logs, or
+# the built site.
+name: RetroAchievements sync
+
+on:
+  schedule:
+    # Daily, ~9:00 AM Eastern (14:00 UTC during EST).
+    - cron: "0 14 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch RetroAchievements data
+        env:
+          RA_USERNAME: ${{ secrets.RA_USERNAME }}
+          RA_API_KEY: ${{ secrets.RA_API_KEY }}
+        run: |
+          python3 - <<'PYEOF'
+          import json, os, urllib.request, urllib.parse
+          from datetime import datetime, timezone
+
+          BASE = "https://retroachievements.org/API/"
+          USER = os.environ["RA_USERNAME"]
+          KEY = os.environ["RA_API_KEY"]
+          # RA game IDs, verified against API_GetGameList on 2026-11-14
+          # (main achievement sets only — no subsets, no hacks).
+          GAMES = {
+              724: "Pokémon Red",
+              586: "Pokémon Blue",
+              723: "Pokémon Yellow",
+              576: "Pokémon Gold",
+              722: "Pokémon Silver",
+              810: "Pokémon Crystal",
+              515: "Pokémon FireRed",
+              668: "Pokémon Emerald",
+              791: "Pokémon Sapphire",
+              10113: "The Legend of Zelda: Ocarina of Time",
+              710: "The Legend of Zelda: Oracle of Ages",
+              676: "The Legend of Zelda: Oracle of Seasons",
+              559: "The Legend of Zelda: The Minish Cap",
+              580: "The Legend of Zelda: A Link to the Past & Four Swords",
+          }
+
+          def call(path, params):
+              url = BASE + path + "?" + urllib.parse.urlencode(params)
+              req = urllib.request.Request(
+                  url, headers={"User-Agent": "SaveSnapshot-RA-Sync/1.0"})
+              with urllib.request.urlopen(req, timeout=60) as r:
+                  return json.load(r)
+
+          summary = call("API_GetUserSummary.php",
+                         {"u": USER, "y": KEY, "g": 10, "a": 50})
+          # Recent unlocks from the summary, grouped per game, newest first.
+          recent_by_game = {}
+          for a in (summary.get("RecentAchievements") or {}).values():
+              gid = a.get("GameID")
+              if gid in GAMES:
+                  recent_by_game.setdefault(gid, []).append({
+                      "title": a.get("Title"),
+                      "description": a.get("Description"),
+                      "points": a.get("Points"),
+                      "date": (a.get("DateAwarded") or "")[:10],
+                  })
+          for lst in recent_by_game.values():
+              lst.sort(key=lambda x: x["date"], reverse=True)
+
+          games = {}
+          for gid, title in GAMES.items():
+              d = call("API_GetGameInfoAndUserProgress.php",
+                       {"u": USER, "g": gid, "y": KEY})
+              achs = d.get("Achievements") or {}
+              earned = [a for a in achs.values() if a.get("DateEarned")]
+              games[str(gid)] = {
+                  "id": gid,
+                  "title": title,
+                  "unlocked": d.get("NumAwardedToUser", 0),
+                  "total": d.get("NumAchievements", len(achs)),
+                  "completion": d.get("UserCompletion"),
+                  "points_earned": sum(a.get("Points", 0) for a in earned),
+                  "points_total": sum(a.get("Points", 0) for a in achs.values()),
+                  "recent": recent_by_game.get(gid, [])[:5],
+              }
+
+          out = {
+              "user": USER,
+              "fetched_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+              "games": games,
+          }
+          with open("ra-data.json", "w", encoding="utf-8") as fh:
+              json.dump(out, fh, indent=2, ensure_ascii=False)
+              fh.write("\n")
+          print(f"wrote ra-data.json: {len(games)} games")
+          PYEOF
+
+      - name: Commit ra-data.json if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add ra-data.json
+          git diff --cached --quiet || (git commit -m "Update RetroAchievements data" && git push)
