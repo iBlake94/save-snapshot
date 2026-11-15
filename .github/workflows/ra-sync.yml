@@ -4,7 +4,12 @@
 # (network-first, never cached) and shows per-game progress next to each
 # snapshot. The API key and username come from repository secrets
 # (RA_API_KEY, RA_USERNAME) and never appear in the repo, the logs, or
-# the built site.
+# the built site. Playtime: API_GetGameInfoAndUserProgress returns
+# UserTotalPlaytime in SECONDS (per the RAWeb source docblock); it is
+# stored as playtime_seconds per game. The PWA uses it only as a fallback
+# for games whose saves have no play-time counter (Ocarina of Time, The
+# Minish Cap, A Link to the Past & Four Swords) — and only counts time
+# played while signed in to RetroAchievements.
 name: RetroAchievements sync
 
 on:
@@ -90,6 +95,7 @@ jobs:
                   "completion": d.get("UserCompletion"),
                   "points_earned": sum(a.get("Points", 0) for a in earned),
                   "points_total": sum(a.get("Points", 0) for a in achs.values()),
+                  "playtime_seconds": int(d.get("UserTotalPlaytime") or 0),
                   "recent": recent_by_game.get(gid, [])[:5],
               }
 
