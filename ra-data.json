@@ -1,6 +1,6 @@
 {
   "user": "iBlake94",
-  "fetched_at": "2026-11-15T03:03:09.317551Z",
+  "fetched_at": "2026-11-15T03:38:19.026106Z",
   "games": {
     "724": {
       "id": 724,
@@ -10,6 +10,7 @@
       "completion": "3.23%",
       "points_earned": 8,
       "points_total": 745,
+      "playtime_seconds": 1017,
       "recent": []
     },
     "586": {
@@ -20,6 +21,7 @@
       "completion": "100.00%",
       "points_earned": 678,
       "points_total": 678,
+      "playtime_seconds": 105806,
       "recent": []
     },
     "723": {
@@ -30,6 +32,7 @@
       "completion": "3.95%",
       "points_earned": 3,
       "points_total": 458,
+      "playtime_seconds": 2073,
       "recent": []
     },
     "576": {
@@ -40,6 +43,7 @@
       "completion": "0.00%",
       "points_earned": 0,
       "points_total": 685,
+      "playtime_seconds": 240,
       "recent": []
     },
     "722": {
@@ -50,6 +54,7 @@
       "completion": "1.33%",
       "points_earned": 10,
       "points_total": 616,
+      "playtime_seconds": 235,
       "recent": []
     },
     "810": {
@@ -60,6 +65,7 @@
       "completion": "20.35%",
       "points_earned": 107,
       "points_total": 864,
+      "playtime_seconds": 68157,
       "recent": []
     },
     "515": {
@@ -70,6 +76,7 @@
       "completion": "9.84%",
       "points_earned": 27,
       "points_total": 453,
+      "playtime_seconds": 26713,
       "recent": []
     },
     "668": {
@@ -80,6 +87,7 @@
       "completion": "1.02%",
       "points_earned": 2,
       "points_total": 2086,
+      "playtime_seconds": 2289,
       "recent": []
     },
     "791": {
@@ -90,6 +98,7 @@
       "completion": "0.00%",
       "points_earned": 0,
       "points_total": 485,
+      "playtime_seconds": 931,
       "recent": []
     },
     "10113": {
@@ -100,6 +109,7 @@
       "completion": "0.00%",
       "points_earned": 0,
       "points_total": 690,
+      "playtime_seconds": 0,
       "recent": []
     },
     "710": {
@@ -110,6 +120,7 @@
       "completion": "1.82%",
       "points_earned": 3,
       "points_total": 514,
+      "playtime_seconds": 340,
       "recent": []
     },
     "676": {
@@ -120,6 +131,7 @@
       "completion": "0.00%",
       "points_earned": 0,
       "points_total": 509,
+      "playtime_seconds": 539,
       "recent": []
     },
     "559": {
@@ -130,6 +142,7 @@
       "completion": "7.58%",
       "points_earned": 25,
       "points_total": 705,
+      "playtime_seconds": 23541,
       "recent": []
     },
     "580": {
@@ -140,6 +153,7 @@
       "completion": "0.00%",
       "points_earned": 0,
       "points_total": 570,
+      "playtime_seconds": 60,
       "recent": []
     }
   }
