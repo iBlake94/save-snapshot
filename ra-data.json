@@ -1,6 +1,6 @@
 {
   "user": "iBlake94",
-  "fetched_at": "2026-11-21T20:20:07.237696Z",
+  "fetched_at": "2026-11-22T20:32:29.467853Z",
   "games": {
     "724": {
       "id": 724,
@@ -21,7 +21,7 @@
       "completion": "100.00%",
       "points_earned": 678,
       "points_total": 678,
-      "playtime_seconds": 105806,
+      "playtime_seconds": 105866,
       "recent": []
     },
     "723": {
